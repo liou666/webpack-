@@ -1,0 +1,8 @@
+body {
+    color: #12345678
+}
+
+.content {
+    color: pink;
+    user-select: none;
+}
