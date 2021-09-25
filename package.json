@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "css-loader": "^6.3.0",
+    "file-loader": "^6.2.0",
     "install": "^0.13.0",
     "less": "^4.1.1",
     "less-loader": "^10.0.1",
@@ -30,6 +31,7 @@
     "postcss": "^8.3.6",
     "postcss-loader": "^6.1.1",
     "postcss-preset-env": "^6.7.0",
-    "style-loader": "^3.2.1"
+    "style-loader": "^3.2.1",
+    "url-loader": "^4.1.1"
   }
 }

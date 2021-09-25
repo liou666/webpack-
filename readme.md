@@ -27,7 +27,7 @@ loader的使用有两种方式：
      ```
 2. 内联方式：在每个 `import` 语句中显式指定 `loader`，需要用！隔开 `例如：import "css-loader!./css/index.css"`
 
-####样式loader
+#### 样式loader
 |  loader   | 作用  |
 |  ----  | ----  |
 | postcss-loader  | 将css增加浏览器前缀 （配合插件postcss-preset-env使用）|
@@ -37,3 +37,11 @@ loader的使用有两种方式：
 
 
 
+
+#### 处理文件的loader
+|  loader   | 作用  |
+|  ----  | ----  |
+| url-loader  |将文件转为base64编码|
+| file-loader  | 将文件打包至静态文件夹下面| 
+
+> 注意： 一般在处理小文件的时候使用url-loader，可以减少网络请求的次数。文件过大时一般用file-loader，防止首屏加载过慢

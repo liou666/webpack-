@@ -6,3 +6,12 @@ body {
     color: pink;
     user-select: none;
 }
+
+.test {
+    user-select: all;
+}
+
+.test_url {
+    background-image: url("../img/2.jpg");
+    display: inline-block;
+}
