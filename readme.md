@@ -42,6 +42,17 @@ loader的使用有两种方式：
 |  loader   | 作用  |
 |  ----  | ----  |
 | url-loader  |将文件转为base64编码|
-| file-loader  | 将文件打包至静态文件夹下面| 
+| file-loader  | 将文件打包至静态文件夹下面（处理字体图标也用这个）| 
 
 > 注意： 一般在处理小文件的时候使用url-loader，可以减少网络请求的次数。文件过大时一般用file-loader，防止首屏加载过慢
+
+#### 资源模块(asset module)
+**webpack 5**出现， 它允许使用资源文件（字体，图标等）而无需配置额外 `loader`。
+
+资源模块类型(asset module type)，通过添加 4 种新的模块类型，来替换所有这些 loader：
+|  asset   | 作用  |  相当于 |
+|  ----  | ----  | ---- |
+| asset/resource  |发送一个单独的文件并导出 URL。|之前通过使用 file-loader 实现|
+| asset/inline  | 导出一个资源的 data URI| 之前通过使用 url-loader 实现| 
+|asset/source| 导出资源的源代码|之前通过使用 raw-loader 实现|
+|asset| 在导出一个 data URI 和发送一个单独的文件之间自动选择|之前通过使用 url-loader，并且配置资源体积限制实现|

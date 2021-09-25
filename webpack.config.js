@@ -3,14 +3,15 @@
  * @Autor: Liou
  * @Date: 2021-09-21 13:34:49
  * @LastEditors: Liou
- * @LastEditTime: 2021-09-25 14:57:22
+ * @LastEditTime: 2021-09-25 15:39:13
  */
 console.log('-----------------------');
 module.exports = {
     entry: './src/index.js',
     output: {
         filename: "index.js",
-        path: __dirname + "/dist"//这里必须是绝对路径
+        path: __dirname + "/dist",//这里必须是绝对路径，
+        // assetModuleFilename: 'images/[name].[hash:6][ext]'
     },
     module: {
         rules: [
@@ -55,15 +56,41 @@ module.exports = {
             },
             {
                 test: /\.jpg$/,
-                use: [
-                    {
-                        loader: "url-loader",
-                        options: {
-                            name: 'img/[name][hash:6].[ext]',
-                            limit: 100 * 1024 //小于100kb的文件被转成base64编码，大于100kb的文件保存在静态文件夹
-                        }
+                // use: [
+                //     {
+                //         loader: "url-loader",
+                //         options: {
+                //             name: 'img/[name][hash:6].[ext]',
+                //             limit: 100 * 1024 //小于100kb的文件被转成base64编码，大于100kb的文件保存在静态文件夹
+                //         }
+                //     }
+                // ]
+
+                //相当于file-loader webpack5内置
+                // type: "asset/resource",
+                // 
+
+                //相当于url-loader webpack5内置
+                // type: "asset/inline",
+
+                type: 'asset',//webpack 将按照默认条件，自动地在 resource 和 inline 之间进行选择：小于 8kb 的文件，将会视为 inline 模块类型，否则会被视为 resource 模块类型。
+                generator: {
+                    filename: 'images/[name].[hash:6][ext]'
+                },
+                parser: {
+                    dataUrlCondition: {
+                        maxSize: 4 * 1024 // 4kb 表示大于4kb使用 resource，否则使用inline
                     }
-                ]
+                }
+
+            },
+
+            {
+                test: /\.ttf/i,
+                generator: {
+                    filename: 'font/[name].[hash:6][ext]'
+                },
+
             }
         ]
     }
