@@ -3,13 +3,17 @@
  * @Autor: Liou
  * @Date: 2021-09-21 13:34:49
  * @LastEditors: Liou
- * @LastEditTime: 2021-09-25 15:39:13
+ * @LastEditTime: 2021-09-25 16:51:00
  */
 console.log('-----------------------');
+const { CleanWebpackPlugin } = require("clean-webpack-plugin")
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const { DefinePlugin } = require("webpack")//定义全局变量
+const CopyWebpackPlugin = require("copy-webpack-plugin")
 module.exports = {
     entry: './src/index.js',
     output: {
-        filename: "index.js",
+        filename: "js/index.js",
         path: __dirname + "/dist",//这里必须是绝对路径，
         // assetModuleFilename: 'images/[name].[hash:6][ext]'
     },
@@ -89,9 +93,31 @@ module.exports = {
                 test: /\.ttf/i,
                 generator: {
                     filename: 'font/[name].[hash:6][ext]'
-                },
-
+                }
             }
         ]
-    }
+    },
+    //配置插件
+    plugins: [
+        new CleanWebpackPlugin(),
+        new HtmlWebpackPlugin({
+            title: "liou webpack",
+            template: "./public/index.html",
+            // filename: "1.html"
+        }),
+        new DefinePlugin({
+            BASE_URL: "'./'"
+        }),
+
+        new CopyWebpackPlugin({
+            patterns: [
+                {
+                    from: "public",
+                    globOptions: {
+                        ignore: ['**/index.html', '**/1.js']
+                    }
+                }
+            ]
+        })
+    ]
 }

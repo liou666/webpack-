@@ -56,3 +56,17 @@ loader的使用有两种方式：
 | asset/inline  | 导出一个资源的 data URI| 之前通过使用 url-loader 实现| 
 |asset/source| 导出资源的源代码|之前通过使用 raw-loader 实现|
 |asset| 在导出一个 data URI 和发送一个单独的文件之间自动选择|之前通过使用 url-loader，并且配置资源体积限制实现|
+
+#### 常用的插件
+"clean-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "^9.0.1",
+    "css-loader": "^6.3.0",
+    "file-loader": "^6.2.0",
+    "html-webpack-plugin": "^5.3.2",
+
+|  插件   | 作用  |
+|  ----  | ----  |
+| clean-webpack-plugin  |每次打包的时候删除原先的目录|
+| html-webpack-plugin  | 配置打包的html模板| 
+| copy-webpack-plugin  | 将文件整体打包到dist文件夹下| 
+| DefinePlugin  | 配置全局变量（webpack内置插件）| 
