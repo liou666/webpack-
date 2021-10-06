@@ -3,7 +3,7 @@
  * @Autor: Liou
  * @Date: 2021-09-21 13:34:49
  * @LastEditors: Liou
- * @LastEditTime: 2021-09-25 16:51:00
+ * @LastEditTime: 2021-10-01 15:17:36
  */
 console.log('-----------------------');
 const { CleanWebpackPlugin } = require("clean-webpack-plugin")
@@ -17,6 +17,8 @@ module.exports = {
         path: __dirname + "/dist",//这里必须是绝对路径，
         // assetModuleFilename: 'images/[name].[hash:6][ext]'
     },
+    mode: 'development',//默认是preduction模式
+    devtool: "hidden-source-map",
     module: {
         rules: [
             {
@@ -94,6 +96,17 @@ module.exports = {
                 generator: {
                     filename: 'font/[name].[hash:6][ext]'
                 }
+            },
+            {
+                test: /js$/,
+                use: [
+                    {
+                        loader: "babel-loader",
+                        options: {
+                            presets: ["@babel/preset-env"]
+                        }
+                    }
+                ]
             }
         ]
     },

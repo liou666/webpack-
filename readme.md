@@ -70,3 +70,84 @@ loader的使用有两种方式：
 | html-webpack-plugin  | 配置打包的html模板| 
 | copy-webpack-plugin  | 将文件整体打包到dist文件夹下| 
 | DefinePlugin  | 配置全局变量（webpack内置插件）| 
+
+#### loader和plugin的区别
++ `loader`是用于**特定的模块类型**进行转化
++ `plugin`可以用于**执行更广泛的任务**，比如打包优化、资源管理等。
+- `loader`即为文件加载器，操作的是**文件**，将文件A通过`loader`转换成文件B，**是一个单纯的文件转化过程。** **运行在打包文件之前。**
+
+- `plugin`即为插件，是一个扩展器，丰富`webpack`本身，增强功能 ，针对的是在`loader`结束之后，`webpack`打包的整个过程，**他并不直接操作文件，而是基于事件机制工作**，监听`webpack`打包过程中的某些节点，执行广泛的任务。  **在整个编译周期都起作用**
+
+#### devtool
+此选项控制是否生成，以及如何生成 `source map`,**方便代码调试。**
+> 注意不要混淆 devtool 字符串的顺序,顺序是:
+`[inline-|hidden-|eval-][nosources-][cheap-[module-]]source-map.`
+
+**最佳实践：**
++ 开发环境，推荐使用source-map或者cheap-module-source-map（这分别是vue和react使用的值，可以获得调试信息，方便快速开发）
++ 发布阶段：建议使用false或者none
+
+### DevServe与HMR
+每次修改完代码之后，都需要重新执行 `npm run build` 命令，很繁琐。并且每次编译过程中都会生成新的文件**也就是进行了文件操作**，**所以效率很低**。
+
++ **第一种解决方案**：**通过`webpack`自带的`watch`来监听文件的变化。**
+在打包的时候加上参数 `--watch`即可。`webpack --watch`
+也可以在`webpack.config.js`文件中配置`{watch：true}`,
+**这样就能在文件发生变化是自动重新打包。
+但是实质上还是每次对所有文件进行编译，然后生成新的文件。所以效率也是很低的**
+
++ **第二种解决方案**：**通过webpack-dev-server这个插件完成。**
+安装`webpack-dev-server`之后，在终端执行`webpack serve`命令，会默认开启一个服务，当源文件发生变化的时候，会自动重新编译。与上面watch方式不同的是，**`webpack-dev-server`内部会开启一个额express服务，并将编译后的文件存入内存中，不会进行文件操作，所以效率会有所提高。但是每次编译后浏览器会刷新整个页面。**
+
+### 开启HMR
+>HMR（模块热更新）可以做到在应用程序运行的过程当中，替换，删除，添加，修改模块，而不刷新整个页面。
+
+开启HMR，需要在`webpack.config.js`文件中配置
+ ```js
+ devServer: {
+        hot: true
+ }
+ ```
+ 然后再去指定对应模块去使用热更新。
+ ```js
+ //指定math.js模块也更新（vuex就使用的这种方式）
+ if (module.hot) {
+    module.hot.accept("./math.js", () => {
+        console.log("math.js changed!")
+    })
+}。
+ ```
+### Vue和React中使用HMR
+
++ **React中使用的是通过插件`react-refresh`来实现。**
+ 首先安装相关依赖 `npm install @pmmmwh/react-refresh-webpack-plugin react-refresh -D`然后修改`webpack.config.js`和`babel.config.js`文件。
+   ```js
+   //webpack.config.js
+   const ReactRefreshWebpackPlugi=require  ('react-refresh-webpack-plugin')
+   module.exports={
+       plugins:[
+           new ReactRefreshWebpackPlugin()
+       ]
+   }
+   /*******************************/
+   //babel.config.js
+   
+    module.exports={
+        presets:[
+            ["@babel/preset-env"],
+            ["@babel/preset-react]
+        ]    
+        plugins:[
+           ["react-refresh/babel"]
+        ]
+    }
+   
+    ```
++ **Vue的加载需要使用vue-loader，而vue-loader加载的组件默认会帮我们进行HMR的处理**
+
+### HMR原理
+
+**webpack-dev-server会创建两个服务:提供静态资源的服务( express )和Socket服务( net.Socket) **; 
+- express server负责直接提供静态资源的服务**(打包后的资源直接被浏览器请求和解析)**;
+
+- HMR Socket Server，**是一个socket的长连接:当服务器监听到对应的模块发生变化时，会生成两个文件json (manifest文件)和js文件( update chunk)**;通过长连接，可以直接将这两个文件主动发送给客户端(浏览器);浏览器拿到两个新的文件后，通过**HMR runtime机制**，加载这两个文件，并且针对修改的模块进行更新;
