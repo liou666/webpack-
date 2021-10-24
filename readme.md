@@ -151,3 +151,133 @@ loader的使用有两种方式：
 - express server负责直接提供静态资源的服务**(打包后的资源直接被浏览器请求和解析)**;
 
 - HMR Socket Server，**是一个socket的长连接:当服务器监听到对应的模块发生变化时，会生成两个文件json (manifest文件)和js文件( update chunk)**;通过长连接，可以直接将这两个文件主动发送给客户端(浏览器);浏览器拿到两个新的文件后，通过**HMR runtime机制**，加载这两个文件，并且针对修改的模块进行更新;
+
+
+### 代码分离
+
+常用的代码分离方法有三种：
+
++ **入口起点：使用 `entry` 配置手动地分离代码。**
+    ```js
+    entry: {
+        "math": "./src/math.js",
+        "index": "./src/index.js"
+    },
+    output: {
+        filename: "[name]-bundle.js",//这里的[name]对应的就是entry中的key。
+        path: path.resolve(__dirname, "../dist")
+    },
+    ```
+   **注意**：如果我们在`math.js` 和`index.js`中引入一个第三方库如`loadsh`，那么打包之后的两个文件都会有`loadsh`。这是个问题。
++ **防止重复：使用 `Entry dependencies` 或者 `SplitChunksPlugin` 去重和分离 `chunk`。**
+上述模块重复的问题，可以通过配置 `dependOn option` 选项来解决。
+    ```js
+     entry: {
+            math: { import: "./src/math.js",    dependOn: 'shared' },
+            index: { import: "./src/index.js",  dependOn: 'shared' },
+            shared: ["loadsh"]
+        },
+    ```
+    也可以通过插件SplitChunksPlugin去除重复的模块。
+    ```js
+    entry: {
+      math: "./src/math.js",
+      index: "./src/index.js",
+    },
+    optimization: {
+      splitChunks: {
+        chunks: 'all',
+      },
+    },
+    ```
+
++ **动态导入：通过模块的内联函数调用来分离代码。**
+>`webpack`对于异步导入的模块会自动处理成单独的`chunk`。
+
+如果想为打包的`chunk`命名可以在`output`选项中配置`chunkFilename`
+  ```js
+  output: {
+        filename: "[name].bundle.js",
+        chunkFilename: "[name].chunk.js",//这里指定chunk的名字
+        path: path.resolve(__dirname, "../dist")
+  }
+  ```
+  有时候我们想把对个模块都打包在同个异步块 (`chunk`) 中。只需要使用一个特殊的注释语法来提供 `chunk name` 。
+
+   ```js
+    import(/* webpackChunkName: "group" */ './Foo.js')
+    import(/* webpackChunkName: "group" */ './Bar.js')
+    import(/* webpackChunkName: "group" */ './Baz.js')
+
+    //经过webpack打包后会生成一个group.chunk.js的文件
+   ```
+
+### Tree Shaking
+webpack 实现Tree Shaking采用了两种方案
++ usedExports:通过标记某些函数是否被调用，之后通过Terser来进行优化。**当设置usedExports为true时，打包后的代码中会在没有副作用的代码片段上增加注释`/* unused harmony export cut */`。之后通过Terser来清除掉该代码。**
+    ```js
+    //开发环境下development
+    optimization: {
+        usedExports: true,//production模式下默认为true
+        minimize: true,
+        minimizer: [
+            new Terser()
+        ]
+    }
+    ```
++ sideEffects:跳过整个模块/文件，直接查看该文件是否有副作用。
+```js
+//bar.js
+export function bar(a) {
+    return a + 'bar'
+}
+window.aaa = "123"//这里产生了副作用
+//------------------------------------- 
+   
+//index.js入口文件
+import './bar'
+console.log(window.aaa);
+```
+如果采用第一种方案，虽然会删除掉`bar`函数，但是会保留函数导入的代码，如果想删除干净可以在`package.json`文件中配置**`sideEffects`为`false`（表示所有模块都被看做无副作用的）**
+
+ ```js
+ //package.json
+   "sideEffects":false,
+
+//或者也可以通过数组的方式指定特定模块为有副作用的模块
+
+//package.json
+   "sideEffects":[
+        "./src/bar.js",
+        "**.css"
+    ] ,
+
+ ```
+
+ ### npm包发布
+ 通常我们在npm发布一个工具包的时候很难同时对node环境和浏览器环境做到同时兼容。但是如果用打包工具进行npm包的发布会解决这个问题。
+ ```js
+ //index.js
+ //不使用打包工具时，在浏览器上使用这个包会出问题
+import { math } from "./lib/math.js"
+
+export {
+    format,
+    math
+}
+ ```
+
+ ```js
+ //使用webpack打包之后，再对打包之后的包进行发布
+module.exports = {
+    entry: "./index.js",
+    output: {
+        filename: "bundle.js",
+        path: __dirname + "/dist",
+        libraryTarget: 'umd',//指定模块
+        library: "util_liou",//打包之后的包名，也是挂载到全局的一个变量名
+        globalObject: "this"//指定要挂在的哪个对象上，'this'表示在全局对象（浏览器是window，node环境为global）
+    },
+
+}
+ ```
