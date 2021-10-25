@@ -439,3 +439,67 @@ class Compiler {
 
 }
 ```
+
+### 自定义 loader
+
+> loader 本质上就是一个函数，这个函数会在我们在我们加载一些文件时执行。注意不能用箭头函数，因为会改变 this。
+
+**同步 loader**
+
+```js
+//liou-loader.js
+module.exports = function (context) {
+  //context就是文件里面的内容
+  //这里可以通过 this.query API拿到配置文件中options里面的参数
+  let { name, age } = this.query
+
+  let res = context + `姓名：${name} 年龄：${age}`
+
+  //这里可以通过这种形式返回
+  return res
+
+  //也可以通过回调的方式返回(第一个参数是错误处理，第二个参数是返回结果，第三个参数是source-map)
+  return this.callbak(null, res)
+}
+```
+
+```js
+//webpack.config.js
+module.exports = function (context) {
+   module: {
+        rules: [{
+                test: /\.js/,
+                use: [{
+                        loader: "liou-loader",
+                        options: {
+                            name: 'liou',
+                            age: 18
+                        }
+                    }
+                ]
+
+            }
+        ]
+    },
+    resolveLoader: {
+        modules: ['node_modules', './src/loaders'],
+    },
+}
+```
+
+**异步 loader**
+
+```js
+module.exports = function (context) {
+  let { name, age } = this.query
+
+  let res = context + `姓名：${name} 年龄：${age}`
+  //通过调用this.async处理异步loader
+  let asyncfunc = this.async()
+  setTimeout(() => {
+    asyncfunc(null, res)
+  }, 2000)
+}
+```
+
+### 自定义 plugin
